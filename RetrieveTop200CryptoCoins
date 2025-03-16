@@ -1,0 +1,28 @@
+import requests
+import pandas as pd
+
+API_KEY = "3751bf33-6fc6-4358-88eb-fe31dcd63a59"
+ENDPOINT = "https://pro.coinmarketcap.com/v2/cryptocurrency/listings/latest"
+
+params = {"limit": 200}
+headers = {"X-CMC_PRO_API_KEY": API_KEY}
+
+response = requests.get(ENDPOINT, params=params, headers=headers)
+
+if response.status_code == 200:
+    data = response.json()["data"]
+    coins = []
+    for coin in data:
+        rank = coin["cmc_rank"]
+        name = coin["name"]
+        market_cap = coin["quote"]["USD"]["market_cap"]
+        market_cap_formatted = "{:,}".format(int(market_cap))
+        coins.append([rank, name, market_cap_formatted])
+
+    df = pd.DataFrame(coins, columns=["Rank", "Coin Name", "Market Cap (USD)"])
+    html_table = df.to_html(index=False)
+    with open("index.html", "w") as f:
+        f.write(html_table)
+else:
+    with open("index.html", "w") as f:
+        f.write("<p>Error: {}</p>".format(response.status_code))
